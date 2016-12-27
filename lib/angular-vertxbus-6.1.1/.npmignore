@@ -1,0 +1,11 @@
+.DS_Store
+node_modules
+components
+bower_components
+temp
+dist/docs
+
+# Test Stuff
+/test/
+/test_scopes/
+/build
