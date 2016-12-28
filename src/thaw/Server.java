@@ -10,6 +10,7 @@ import io.vertx.ext.web.handler.sockjs.SockJSHandler;
 
 import java.sql.SQLException;
 import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.Date;
 
@@ -59,9 +60,9 @@ public class Server extends AbstractVerticle {
         // Register to listen for messages coming IN to the server
         eb.consumer("chat.to.server").handler(message -> {
             // Create a timestamp string
-            String timestamp = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM).format(Date.from(Instant.now()));
+            String timestamp = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(Date.from(Instant.now()));
             // Send the message back out to all clients with the timestamp prepended.
-            eb.publish("chat.to.client", timestamp + ": " + message.body());
+            eb.publish("chat.to.client", timestamp + "__::__" + message.body());
         });
 
         System.out.println("listen on port 8080");

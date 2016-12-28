@@ -1,6 +1,10 @@
 package thaw.sql.requests;
 
+import thaw.utils.Utils;
+
 import java.sql.Date;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
 
 import static java.util.Objects.requireNonNull;
 
@@ -48,7 +52,6 @@ public interface SQLRequests {
         for (int i = 0; i < s.length(); i++) {
             switch (s.charAt(i)) {
                 case '\'':
-                case '%':
                     tmp.append('\'');
             }
             tmp.append(s.charAt(i));
@@ -60,9 +63,8 @@ public interface SQLRequests {
         return new SQLRequests() {
             @Override
             public String add(String[] arguments) {
-                Date sqlDate = new java.sql.Date(System.currentTimeMillis());
                 // INSERT INTO tablename VALUES (id, username, content, date)
-                return "INSERT INTO " + encodeSQL(arguments[0]) + " (username, content, date) VALUES ('" + encodeSQL(arguments[1]) + "', '" + encodeSQL(arguments[2]) + "', '" + sqlDate + "' )";
+                return "INSERT INTO " + encodeSQL(arguments[0]) + " (username, content, date) VALUES ('" + encodeSQL(arguments[1]) + "', '" + encodeSQL(arguments[2]) + "', '" + new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(java.util.Date.from(Instant.now())) + "' )";
             }
 
             @Override
@@ -119,7 +121,7 @@ public interface SQLRequests {
             public String add(String[] arguments) {
                 if (arguments.length != 3)
                     throw new IllegalArgumentException("Add user doc: need 3 arguments (" + arguments.length + " given).");
-                return "INSERT INTO users VALUES ('" + encodeSQL(requireNonNull(arguments[0])) + "', '" + encodeSQL(requireNonNull(arguments[1])) + "', " + encodeSQL(requireNonNull(arguments[2])) + ")";
+                return "INSERT INTO users VALUES ('" + encodeSQL(requireNonNull(arguments[0])) + "', '" + Utils.toSHA256(encodeSQL(requireNonNull(arguments[1]))) + "', " + encodeSQL(requireNonNull(arguments[2])) + ")";
             }
 
             @Override

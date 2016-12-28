@@ -10,6 +10,7 @@ import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.ext.web.handler.StaticHandler;
 import thaw.sql.SQLConsumer;
 import thaw.sql.SQLHandler;
+import thaw.utils.Utils;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -47,6 +48,7 @@ class REST {
     void routeSetup(Router router) {
         router.get("/api/users").handler(r -> catchExceptions(this::getAllUsers, r));
         router.put("/api/users/:username/:password/:avatar").handler(r -> catchExceptions(this::addUser, r));
+        router.get("/api/authenticate/:username/:password").handler(r -> catchExceptions(this::authenticate, r));
 
         router.put("/api/main/channels/:name").handler(r -> catchExceptions(this::createChannel, r));
         router.get("/api/main/channels").handler(r -> catchExceptions(this::getAllChannels, r));
@@ -67,6 +69,27 @@ class REST {
                     .setStatusMessage("Database issue.")
                     .putHeader("content-type", "application/json").end();
         }
+    }
+
+    private void authenticate (RoutingContext routingContext) throws SQLException {
+        HttpServerResponse response = routingContext.response();
+
+        String[] arguments = getArguments(routingContext.request(), "username", "password");
+
+        if (sendErrorIfEmpty(response, arguments))
+            return;
+
+        List<Map<String, String>> list = resultSetToList(sqlHandler.getUser(arguments), "username", "password");
+        if (list.size() != 1) {
+            response.putHeader("content-type", "application/json").setStatusCode(402).setStatusMessage("This user doesn't exist.").end();
+            return;
+        }
+        if (!Utils.checkPassword(list.get(0).get("password"), arguments[1])) {
+            response.putHeader("content-type", "application/json").setStatusCode(403).setStatusMessage("Wrong password").end();
+            return;
+        }
+
+        response.putHeader("content-type", "application/json").end();
     }
 
     private void createChannel(RoutingContext routingContext) throws SQLException {
