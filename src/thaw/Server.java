@@ -43,7 +43,7 @@ public class Server extends AbstractVerticle {
         // Allow events for the designated addresses in/out of the event bus bridge
         BridgeOptions opts = new BridgeOptions()
                 .addInboundPermitted(new PermittedOptions().setAddress("chat.to.server"))
-                .addOutboundPermitted(new PermittedOptions().setAddress("chat.to.client"));
+                .addOutboundPermitted(new PermittedOptions().setAddressRegex("chat.to.client.+"));
 
         // Create the event bus bridge and add it to the router.
         SockJSHandler ebHandler = SockJSHandler.create(vertx).bridge(opts);
@@ -52,6 +52,7 @@ public class Server extends AbstractVerticle {
         rest.allowRequest(router);
 
         // route to JSON REST APIs
+        // Je vais voir
         rest.routeSetup(router);
 
         vertx.createHttpServer().requestHandler(router::accept).listen(8080);
@@ -62,7 +63,7 @@ public class Server extends AbstractVerticle {
             // Create a timestamp string
             String timestamp = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(Date.from(Instant.now()));
             // Send the message back out to all clients with the timestamp prepended.
-            eb.publish("chat.to.client", timestamp + "__::__" + message.body());
+            eb.publish("chat.to.client." + message.body().toString().split("__::__")[0], timestamp + "__::__" + message.body());
         });
 
         System.out.println("listen on port 8080");
