@@ -4,16 +4,21 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerOptions;
+import io.vertx.core.json.Json;
 import io.vertx.core.net.JksOptions;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.handler.CookieHandler;
+import io.vertx.ext.web.handler.SessionHandler;
 import io.vertx.ext.web.handler.sockjs.BridgeOptions;
 import io.vertx.ext.web.handler.sockjs.PermittedOptions;
 import io.vertx.ext.web.handler.sockjs.SockJSHandler;
+import io.vertx.ext.web.sstore.LocalSessionStore;
 
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.Date;
+import java.util.Map;
 
 // java
 // --add-exports java.base/sun.nio.ch=ALL-UNNAMED
@@ -41,9 +46,15 @@ public class Server extends AbstractVerticle {
     public void start() {
         Router router = Router.router(vertx);
 
+        router.route().handler(CookieHandler.create());
+        router.route().handler(SessionHandler.create(LocalSessionStore.create(vertx)));
+
         // Allow events for the designated addresses in/out of the event bus bridge
         BridgeOptions opts = new BridgeOptions()
                 .addInboundPermitted(new PermittedOptions().setAddress("chat.to.server"))
+                .addInboundPermitted(new PermittedOptions().setAddress("log.to.server"))
+                .addInboundPermitted(new PermittedOptions().setAddress("unlog.to.server"))
+                .addOutboundPermitted(new PermittedOptions().setAddressRegex("log.to.client"))
                 .addOutboundPermitted(new PermittedOptions().setAddressRegex("chat.to.client.+"));
 
         // Create the event bus bridge and add it to the router.
@@ -54,6 +65,7 @@ public class Server extends AbstractVerticle {
 
         // route to JSON REST APIs
         rest.routeSetup(router);
+
 
         // For HTTPS
         HttpServerOptions httpsOpt = new HttpServerOptions().setUseAlpn(false).setSsl(true).setKeyStoreOptions(new JksOptions().setPath("keystore.jks").setPassword("password"));
@@ -71,6 +83,14 @@ public class Server extends AbstractVerticle {
             String timestamp = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(Date.from(Instant.now()));
             // Send the message back out to all clients with the timestamp prepended.
             eb.publish("chat.to.client." + message.body().toString().split("__::__")[0], timestamp + "__::__" + message.body());
+        });
+
+        eb.consumer("log.to.server").handler(message -> {
+           eb.publish("log.to.client", "log:" + message.body());
+        });
+
+        eb.consumer("unlog.to.server").handler(message -> {
+            eb.publish("log.to.client", "unlog:" + message.body());
         });
     }
 

@@ -5,6 +5,10 @@
 angular.module('test', [])
     .controller('controller', function ($scope, $http) {
         $scope.message = "";
+        $scope.loggedUser = "";
+        $scope.notLogged = true;
+        $scope.isLogged = false;
+
         $scope.createEventBus = function () {
             $scope.eventBus = new EventBus("https://localhost:8080/eventbus/");
 
@@ -16,22 +20,49 @@ angular.module('test', [])
                     console.log(array[1] + ', ' + $scope.currentChannel);
                     $scope.channel.push({date: array[0], username: array[2], content: array[3]});
                     console.log("updated with eventBus");
+                });
+                $scope.eventBus.registerHandler("log.to.client", function (error, message) {
+                    var array = message.body.split(":");
+                    if (array[0] == 'log') {
+                        $scope.loggedUsers.push({username: array[1]});
+                    }
+                    else {
+                        var x = $scope.loggedUsers.indexOf(array[1]);
+                        if (x > -1) {
+                            $scope.loggedUsers.splice(x, 1);
+                        }
+                    }
                 })
             };
 
             $scope.eventBus.onclose = function () {
                 $scope.eventBus.unregisterHandler("chat.to.client." + $scope.currentChannel, function () {
                     console.log("Logged out: " + "chat.to.client." + $scope.currentChannel);
-                })
+                });
+                $scope.eventBus.unregisterHandler("log.to.client", function () {
+                    console.log("Logged out: " + "log.to.client");
+                });
             }
         };
 
         $scope.selectChannel = function selectChannel(channel) {
             $scope.currentChannel = channel;
-            if($scope.eventBus != null)
+            if ($scope.eventBus != null)
                 $scope.eventBus.close();
             $scope.createEventBus();
             $scope.loadContent(channel);
+        };
+
+        $scope.getLoggedUsers = function getLoggedUsers() {
+            console.log("call");
+            $http.get('https://localhost:8080/api/logged/users/')
+                .then(function (response) {
+                    $scope.loggedUsers = response.data;
+                    console.log("success");
+                }, function (response) {
+                    $scope.errorCode = response.status;
+                    console.log("error");
+                });
         };
 
         $scope.onPost = function onPost(keyEvent, channel, username, content) {
@@ -46,7 +77,11 @@ angular.module('test', [])
             console.log("call authenticate");
             $http.get('https://localhost:8080/api/authenticate/' + username + '/' + password + "/")
                 .then(function (response) {
+                    $scope.eventBus.publish("log.to.server", username);
                     alert("Successfully logged in !");
+                    $scope.loggedUser = username;
+                    $scope.isLogged = true;
+                    $scope.notLogged = false;
                     console.log("success");
                 }, function (response) {
                     alert(response.statusText);
@@ -54,11 +89,15 @@ angular.module('test', [])
                 })
         };
 
-        $scope.logout = function authenticate(username) {
-            console.log("call authenticate");
+        $scope.logout = function logout(username) {
+            console.log("call logout");
             $http.delete('https://localhost:8080/api/authenticate/' + username + '/')
                 .then(function (response) {
-                    alert("Successfully logged out !");
+                    $scope.eventBus.publish("unlog.to.server", username);
+                    $scope.loggedUser = "";
+                    $scope.isLogged = false;
+                    $scope.notLogged = true;
+                    alert(response.statusText);
                     console.log("success");
                 }, function (response) {
                     alert(response.statusText);
@@ -142,6 +181,7 @@ angular.module('test', [])
             $scope.loadChannels();
             $scope.selectChannel("general");
             $scope.loadContent("general");
+            $scope.getLoggedUsers();
         }
 
         load();

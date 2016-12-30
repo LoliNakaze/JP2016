@@ -6,6 +6,12 @@
 </head>
 <body>
 <div ng-app="test" ng-controller="controller">
+    <table ng-repeat="x in loggedUsers">
+        <tr>
+            <td>{{x.username}}</td>
+        </tr>
+    </table>
+
     <form>
         <table>
             <tr>
@@ -35,60 +41,68 @@
     </table>
 
     __________________________<br>
-    <h2>Authentification</h2>
+    <div ng-show="notLogged">
+        <h2>Authentification</h2>
 
-    <form>
-        <table>
-            <tr>
-                <td>Username* :</td>
-                <td><input type="text" ng-model="a_username" autocomplete="on" placeholder="Enter an username here"></td>
-            </tr>
-            <tr>
-                <td>Password* :</td>
-                <td><input type="password" ng-model="a_password" placeholder="Enter a password"></td>
-            </tr>
-        </table>
-        <button ng-click="authenticate(a_username, a_password)">SUBMIT</button>
-    </form>
-
-    __________________________<br>
-
-    <h2>Channels</h2>
-    <table>
         <form>
             <table>
                 <tr>
-                    <td>Channel name* :</td>
-                    <td><input type="text" ng-model="cname" autocomplete="on" placeholder="Enter a channel name here">
+                    <td>Username* :</td>
+                    <td><input type="text" ng-model="a_username" autocomplete="on" placeholder="Enter an username here">
                     </td>
                 </tr>
+                <tr>
+                    <td>Password* :</td>
+                    <td><input type="password" ng-model="a_password" placeholder="Enter a password"></td>
+                </tr>
             </table>
-            <button ng-click="createChannel(cname)">SUBMIT</button>
-            <br>
+            <button ng-click="authenticate(a_username, a_password)">SUBMIT</button>
         </form>
-    </table>
+    </div>
+    <div ng-show="isLogged">
+        <p>Logged as : {{loggedUser}}
+            <button ng-click="logout(loggedUser)">Log out</button>
+        </p>
 
-    ___________________________<br>
-    <h2>Channel select</h2>
-    <table>
-        <tr ng-repeat="x in channels">
-            <td><a href="#" ng-click="selectChannel(x.cname); loadChannel(x.cname);">{{x.cname}}</a></td>
-        </tr>
-        {{errorCode}}
-    </table>
-    ____________________________<br>
-    <h2>Channel content</h2>
-    <table>
-        <h3>{{currentChannel}}</h3>
-        <input type="text" ng-model="message"
-               ng-keypress="onPost($event, currentChannel,'test', message);">
-        <tr ng-repeat="x in channel">
-            <td>{{x.username}}</td>
-            <td>{{x.content}}</td>
-            <td>{{x.date}}</td>
-        </tr>
-        {{errorCode}}
-    </table>
+        __________________________<br>
+
+        <h2>Channels</h2>
+        <table>
+            <form>
+                <table>
+                    <tr>
+                        <td>Channel name* :</td>
+                        <td><input type="text" ng-model="cname" autocomplete="on" placeholder="Enter a channel name here">
+                        </td>
+                    </tr>
+                </table>
+                <button ng-click="createChannel(cname)">SUBMIT</button>
+                <br>
+            </form>
+        </table>
+
+        ___________________________<br>
+        <h2>Channel select</h2>
+        <table>
+            <tr ng-repeat="x in channels">
+                <td><a href="#" ng-click="selectChannel(x.cname); loadChannel(x.cname);">{{x.cname}}</a></td>
+            </tr>
+            {{errorCode}}
+        </table>
+        ____________________________<br>
+        <h2>Channel content</h2>
+        <table>
+            <h3>{{currentChannel}}</h3>
+            <input type="text" ng-model="message"
+                   ng-keypress="onPost($event, currentChannel,loggedUser, message);">
+            <tr ng-repeat="x in channel">
+                <td>{{x.username}}</td>
+                <td>{{x.content}}</td>
+                <td>{{x.date}}</td>
+            </tr>
+            {{errorCode}}
+        </table>
+    </div>
 </div>
 </body>
 

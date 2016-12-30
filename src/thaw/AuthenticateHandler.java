@@ -10,6 +10,7 @@ import thaw.utils.Utils;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -20,7 +21,7 @@ import static thaw.REST.*;
  */
 public class AuthenticateHandler implements Handler<RoutingContext> {
     private SQLHandler sqlHandler;
-    private ArrayList<String> connectedUsers = new ArrayList<>();
+    private ArrayList<Session> connectedUsers = new ArrayList<>();
 
     AuthenticateHandler(SQLHandler sqlHandler) {
         this.sqlHandler = sqlHandler;
@@ -35,7 +36,7 @@ public class AuthenticateHandler implements Handler<RoutingContext> {
         if (sendErrorIfEmpty(response, arguments))
             return;
 
-        List<Map<String, String>> list = null;
+        List<Map<String, String>> list;
         try {
             list = resultSetToList(sqlHandler.getUser(arguments), "username", "password");
         } catch (SQLException e) {
@@ -51,8 +52,8 @@ public class AuthenticateHandler implements Handler<RoutingContext> {
             response.putHeader("content-type", "application/json").setStatusCode(403).setStatusMessage("Wrong password").end();
             return;
         }
-
-        connectedUsers.add(arguments[0]);
+        session.put("username", arguments[0]);
+        connectedUsers.add(session);
         response.putHeader("content-type", "application/json").end();
     }
 
@@ -71,11 +72,15 @@ public class AuthenticateHandler implements Handler<RoutingContext> {
             response.setStatusCode(401).setStatusMessage("No user logged in").end();
             throw new IllegalStateException("there is no logged user, you can't logout");
         }
-        if (!connectedUsers.removeIf(s -> s.equals(username))) {
+        if (!connectedUsers.removeIf(s -> s.data().get("username").equals(username))) {
             response.setStatusCode(402).setStatusMessage("This user is not logged in: " + username);
             return;
         }
-        response.setStatusMessage("Successfully logged out");
+        response.setStatusMessage("Successfully logged out").end();
 
+    }
+
+    List<Session> getAllSessions() {
+        return Collections.unmodifiableList(connectedUsers);
     }
 }

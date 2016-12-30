@@ -50,6 +50,8 @@ class REST {
         router.get("/api/users/").handler(r -> catchExceptions(this::getAllUsers, r));
         router.put("/api/users/:username/:password/:avatar/").handler(r -> catchExceptions(this::addUser, r));
 
+        router.get("/api/logged/users/").handler(this::getLoggedUsers);
+
         router.get("/api/authenticate/:username/:password/").handler(r -> catchExceptions(authHandler::handle, r));
         router.delete("/api/authenticate/:username/").handler(r -> catchExceptions(authHandler::logout, r));
 
@@ -60,6 +62,10 @@ class REST {
         router.get("/api/main/channel/:channel/").handler(r -> catchExceptions(this::getAllInChannel, r));
         // otherwise serve static pages
         router.route().handler(StaticHandler.create());
+    }
+
+    private void getLoggedUsers(RoutingContext routingContext) {
+        routingContext.response().end(authHandler.getAllSessions().stream().map(s -> Json.encodePrettily(Map.of("username", s.get("username")))).collect(Collectors.joining(", ", "[", "]")));
     }
 
     private static void catchExceptions(SQLConsumer<RoutingContext> consumer, RoutingContext routingContext) {
