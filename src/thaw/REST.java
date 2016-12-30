@@ -10,7 +10,6 @@ import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.ext.web.handler.StaticHandler;
 import thaw.sql.SQLConsumer;
 import thaw.sql.SQLHandler;
-import thaw.utils.Utils;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -29,9 +28,11 @@ import static java.util.stream.Collectors.joining;
  */
 class REST {
     private final SQLHandler sqlHandler;
+    private final AuthenticateHandler authHandler;
 
     REST() throws SQLException {
         sqlHandler = SQLHandler.createSQLHandler("test");
+        authHandler = new AuthenticateHandler(sqlHandler);
     }
 
     void allowRequest(Router router) {
@@ -46,15 +47,17 @@ class REST {
     }
 
     void routeSetup(Router router) {
-        router.get("/api/users").handler(r -> catchExceptions(this::getAllUsers, r));
-        router.put("/api/users/:username/:password/:avatar").handler(r -> catchExceptions(this::addUser, r));
-        router.get("/api/authenticate/:username/:password").handler(r -> catchExceptions(this::authenticate, r));
+        router.get("/api/users/").handler(r -> catchExceptions(this::getAllUsers, r));
+        router.put("/api/users/:username/:password/:avatar/").handler(r -> catchExceptions(this::addUser, r));
 
-        router.put("/api/main/channels/:name").handler(r -> catchExceptions(this::createChannel, r));
-        router.get("/api/main/channels").handler(r -> catchExceptions(this::getAllChannels, r));
+        router.get("/api/authenticate/:username/:password/").handler(r -> catchExceptions(authHandler::handle, r));
+        router.delete("/api/authenticate/:username/").handler(r -> catchExceptions(authHandler::logout, r));
 
-        router.put("/api/main/channel/:channel/:username/:content").handler(r -> catchExceptions(this::postInChannel, r));
-        router.get("/api/main/channel/:channel").handler(r -> catchExceptions(this::getAllInChannel, r));
+        router.put("/api/main/channels/:name/").handler(r -> catchExceptions(this::createChannel, r));
+        router.get("/api/main/channels/").handler(r -> catchExceptions(this::getAllChannels, r));
+
+        router.put("/api/main/channel/:channel/:username/:content/").handler(r -> catchExceptions(this::postInChannel, r));
+        router.get("/api/main/channel/:channel/").handler(r -> catchExceptions(this::getAllInChannel, r));
         // otherwise serve static pages
         router.route().handler(StaticHandler.create());
     }
@@ -71,26 +74,7 @@ class REST {
         }
     }
 
-    private void authenticate (RoutingContext routingContext) throws SQLException {
-        HttpServerResponse response = routingContext.response();
 
-        String[] arguments = getArguments(routingContext.request(), "username", "password");
-
-        if (sendErrorIfEmpty(response, arguments))
-            return;
-
-        List<Map<String, String>> list = resultSetToList(sqlHandler.getUser(arguments), "username", "password");
-        if (list.size() != 1) {
-            response.putHeader("content-type", "application/json").setStatusCode(402).setStatusMessage("This user doesn't exist.").end();
-            return;
-        }
-        if (!Utils.checkPassword(list.get(0).get("password"), arguments[1])) {
-            response.putHeader("content-type", "application/json").setStatusCode(403).setStatusMessage("Wrong password").end();
-            return;
-        }
-
-        response.putHeader("content-type", "application/json").end();
-    }
 
     private void createChannel(RoutingContext routingContext) throws SQLException {
         HttpServerResponse response = routingContext.response();
@@ -104,7 +88,7 @@ class REST {
     }
 
     // Keynames need to match with the names of the columns.
-    private static List<Map<String, String>> resultSetToList(ResultSet resultSet, String... keynames) throws SQLException {
+    static List<Map<String, String>> resultSetToList(ResultSet resultSet, String... keynames) throws SQLException {
         List<Map<String, String>> list = new ArrayList<>();
 
         while (resultSet.next()) {
@@ -166,7 +150,7 @@ class REST {
                 .end(resultSetToList(sqlHandler.getAllUsers(), "username", "avatar").stream().map(Json::encodePrettily).collect(joining(",", "[", "]")));
     }
 
-    private String[] getArguments(HttpServerRequest request, String... fields) {
+    static String[] getArguments(HttpServerRequest request, String... fields) {
         String[] contents = new String[fields.length];
 
         IntStream.range(0, fields.length).forEach(i -> contents[i] = requireNonNull(request.getParam(fields[i])));
@@ -174,7 +158,7 @@ class REST {
         return contents;
     }
 
-    private boolean sendErrorIfEmpty(HttpServerResponse response, String[] args) {
+    static boolean sendErrorIfEmpty(HttpServerResponse response, String[] args) {
         boolean emptyArg = Arrays.stream(args).anyMatch(String::isEmpty);
         if (emptyArg)
             response.setStatusCode(401).putHeader("content-type", "application/json").end("Not a valid user");

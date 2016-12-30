@@ -37,15 +37,6 @@ public interface SQLRequests {
      */
     String delete(String key);
 
-    /**
-     * Returns a Update type request string.
-     *
-     * @param object   : The condition verified by the element to be modified.
-     * @param newValue : The new value of that element
-     * @return the request string
-     */
-    String modify(String object, String newValue);
-
     default String encodeSQL(String s) {
         StringBuilder tmp = new StringBuilder();
 
@@ -78,13 +69,6 @@ public interface SQLRequests {
                 // TODO IF NEEDED
                 throw new UnsupportedOperationException();
             }
-
-            // TODO
-            @Override
-            public String modify(String object, String newValue) {
-                // TODO IF NEEDED
-                throw new UnsupportedOperationException();
-            }
         };
     }
 
@@ -107,11 +91,6 @@ public interface SQLRequests {
                 // TODO WHEN TABLE IS CREATED
                 return "DELETE FROM channels WHERE cname == " + encodeSQL(key);
             }
-
-            @Override
-            public String modify(String object, String newValue) {
-                throw new UnsupportedOperationException();
-            }
         };
     }
 
@@ -132,11 +111,6 @@ public interface SQLRequests {
             @Override
             public String delete(String username) {
                 return "DELETE FROM users WHERE username = '" + encodeSQL(requireNonNull(username)) + "'";
-            }
-
-            @Override
-            public String modify(String key, String newValue) {
-                return "UPDATE users SET avatar = " + encodeSQL(newValue) + "' WHERE username = '" + encodeSQL(key) + "'";
             }
         };
     }

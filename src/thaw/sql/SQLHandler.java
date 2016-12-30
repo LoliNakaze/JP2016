@@ -52,7 +52,6 @@ public class SQLHandler {
         Statement statement = connect(database, 1);
 
         String s = SQLRequests.createSQLChannelRequest().add(arguments);
-        System.out.println(s);
 
         return statement.executeUpdate(s);
     }

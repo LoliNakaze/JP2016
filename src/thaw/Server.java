@@ -3,13 +3,14 @@ package thaw;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.http.HttpServerOptions;
+import io.vertx.core.net.JksOptions;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.sockjs.BridgeOptions;
 import io.vertx.ext.web.handler.sockjs.PermittedOptions;
 import io.vertx.ext.web.handler.sockjs.SockJSHandler;
 
 import java.sql.SQLException;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.Date;
@@ -32,7 +33,7 @@ public class Server extends AbstractVerticle {
         vertx.deployVerticle(new Server());
     }
 
-    Server() throws SQLException {
+    private Server() throws SQLException {
         rest = new REST();
     }
 
@@ -52,10 +53,16 @@ public class Server extends AbstractVerticle {
         rest.allowRequest(router);
 
         // route to JSON REST APIs
-        // Je vais voir
         rest.routeSetup(router);
 
-        vertx.createHttpServer().requestHandler(router::accept).listen(8080);
+        // For HTTPS
+        HttpServerOptions httpsOpt = new HttpServerOptions().setUseAlpn(false).setSsl(true).setKeyStoreOptions(new JksOptions().setPath("keystore.jks").setPassword("password"));
+        vertx.createHttpServer(httpsOpt).requestHandler(router::accept).listen(8080);
+        vertxEventBusSetup();
+        System.out.println("listen on port 8080");
+    }
+
+    private void vertxEventBusSetup() {
         EventBus eb = vertx.eventBus();
 
         // Register to listen for messages coming IN to the server
@@ -65,8 +72,6 @@ public class Server extends AbstractVerticle {
             // Send the message back out to all clients with the timestamp prepended.
             eb.publish("chat.to.client." + message.body().toString().split("__::__")[0], timestamp + "__::__" + message.body());
         });
-
-        System.out.println("listen on port 8080");
     }
 
 }

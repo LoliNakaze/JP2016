@@ -5,18 +5,33 @@
 angular.module('test', [])
     .controller('controller', function ($scope, $http) {
         $scope.message = "";
-        $scope.eventBus = new EventBus("http://localhost:8080/eventbus/");
+        $scope.createEventBus = function () {
+            $scope.eventBus = new EventBus("https://localhost:8080/eventbus/");
 
-        $scope.eventBus.onopen = function() {
-            $scope.eventBus.registerHandler("chat.to.client", function(error, message) {
-                console.log('Received: ' + JSON.stringify(message));
-                var array = message.body.split('__::__', 4);
-                console.log(array[1] + ', ' + $scope.currentChannel);
-                if (array[1] == $scope.currentChannel) {
-                    console.log("updated with eventBus");
+            $scope.eventBus.onopen = function () {
+                $scope.eventBus.registerHandler("chat.to.client." + $scope.currentChannel, function (error, message) {
+                    console.log("Logged to: chat.to.client." + $scope.currentChannel);
+                    console.log('Received: ' + JSON.stringify(message));
+                    var array = message.body.split('__::__', 4);
+                    console.log(array[1] + ', ' + $scope.currentChannel);
                     $scope.channel.push({date: array[0], username: array[2], content: array[3]});
-                }
-            })
+                    console.log("updated with eventBus");
+                })
+            };
+
+            $scope.eventBus.onclose = function () {
+                $scope.eventBus.unregisterHandler("chat.to.client." + $scope.currentChannel, function () {
+                    console.log("Logged out: " + "chat.to.client." + $scope.currentChannel);
+                })
+            }
+        };
+
+        $scope.selectChannel = function selectChannel(channel) {
+            $scope.currentChannel = channel;
+            if($scope.eventBus != null)
+                $scope.eventBus.close();
+            $scope.createEventBus();
+            $scope.loadContent(channel);
         };
 
         $scope.onPost = function onPost(keyEvent, channel, username, content) {
@@ -29,25 +44,31 @@ angular.module('test', [])
 
         $scope.authenticate = function authenticate(username, password) {
             console.log("call authenticate");
-            $http.get('http://localhost:8080/api/authenticate/' + username + '/' + password)
+            $http.get('https://localhost:8080/api/authenticate/' + username + '/' + password + "/")
                 .then(function (response) {
                     alert("Successfully logged in !");
                     console.log("success");
                 }, function (response) {
-                    if (response.status == 402) {
-                        alert("This user doesn't exist.");
-                    } else if (response.status == 403) {
-                        alert("Wrong password.");
-                    } else {
-                        alert("Please fill out all the * blanks");
-                    }
+                    alert(response.statusText);
+                    console.log("failure authenticate");
+                })
+        };
+
+        $scope.logout = function authenticate(username) {
+            console.log("call authenticate");
+            $http.delete('https://localhost:8080/api/authenticate/' + username + '/')
+                .then(function (response) {
+                    alert("Successfully logged out !");
+                    console.log("success");
+                }, function (response) {
+                    alert(response.statusText);
                     console.log("failure authenticate");
                 })
         };
 
         $scope.onClickGet = function onClickGet() {
             console.log("call");
-            $http.get('http://localhost:8080/api/users')
+            $http.get('https://localhost:8080/api/users/')
                 .then(function (response) {
                     $scope.users = response.data;
                     console.log("success");
@@ -62,7 +83,7 @@ angular.module('test', [])
                 alert("All the fields have to be filled.");
                 return;
             }
-            $http.put('http://localhost:8080/api/users/' + username + '/' + password + '/' + avatar)
+            $http.put('https://localhost:8080/api/users/' + username + '/' + password + '/' + avatar + "/")
                 .then(function () {
                     $scope.users.push({username: username, avatar: avatar});
                     console.log("success");
@@ -73,7 +94,7 @@ angular.module('test', [])
         };
         $scope.loadChannels = function loadChannels() {
             console.log("call");
-            $http.get('http://localhost:8080/api/main/channels')
+            $http.get('https://localhost:8080/api/main/channels/')
                 .then(function (response) {
                     $scope.channels = response.data;
                     console.log("channel list loaded successfully");
@@ -84,7 +105,7 @@ angular.module('test', [])
         };
         $scope.createChannel = function createChannel(channel) {
             console.log("call channel creation");
-            $http.put('http://localhost:8080/api/main/channels/' + channel)
+            $http.put('https://localhost:8080/api/main/channels/' + channel + '/')
                 .then(function () {
                     $scope.channels.push({cname: channel});
                     console.log("success");
@@ -95,7 +116,7 @@ angular.module('test', [])
         };
         $scope.loadContent = function loadChannel(channel) {
             console.log("call load channel");
-            $http.get('http://localhost:8080/api/main/channel/' + channel)
+            $http.get('https://localhost:8080/api/main/channel/' + channel + '/')
                 .then(function (response) {
                     $scope.channel = response.data;
                     console.log("channel list loaded successfully");
@@ -106,7 +127,7 @@ angular.module('test', [])
         };
         $scope.postMessage = function postMessage(channel, username, content) {
             console.log("call post message");
-            $http.put('http://localhost:8080/api/main/channel/' + channel + '/' + username + '/' + content)
+            $http.put('https://localhost:8080/api/main/channel/' + channel + '/' + username + '/' + content + '/')
                 .then(function () {
                     $scope.eventBus.publish("chat.to.server", channel + '__::__' + username + '__::__' + content);
                     console.log("success");
@@ -114,10 +135,6 @@ angular.module('test', [])
                     $scope.errorCode = response.status;
                     console.log("error post message");
                 });
-        };
-        $scope.selectChannel = function selectChannel(channel) {
-            $scope.currentChannel = channel;
-            $scope.loadContent(channel);
         };
 
         function load() {
