@@ -8,7 +8,6 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.ext.web.handler.StaticHandler;
-import thaw.sql.SQLConsumer;
 import thaw.sql.SQLHandler;
 
 import java.sql.ResultSet;
@@ -33,6 +32,11 @@ class REST {
     REST() throws SQLException {
         sqlHandler = SQLHandler.createSQLHandler("test");
         authHandler = new AuthenticateHandler(sqlHandler);
+    }
+
+    @FunctionalInterface
+    interface SQLConsumer<T> {
+        void accept(T t) throws SQLException;
     }
 
     void allowRequest(Router router) {

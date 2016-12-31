@@ -23,7 +23,7 @@ public class AuthenticateHandler implements Handler<RoutingContext> {
     private SQLHandler sqlHandler;
     private ArrayList<Session> connectedUsers = new ArrayList<>();
 
-    AuthenticateHandler(SQLHandler sqlHandler) {
+    public AuthenticateHandler(SQLHandler sqlHandler) {
         this.sqlHandler = sqlHandler;
     }
 

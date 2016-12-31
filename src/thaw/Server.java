@@ -87,13 +87,8 @@ public class Server extends AbstractVerticle {
             eb.publish("chat.to.client." + message.body().toString().split("__::__")[0], timestamp + "__::__" + message.body());
         });
 
-        eb.consumer("log.to.server").handler(message -> {
-           eb.publish("log.to.client", "log:" + message.body());
-        });
-
-        eb.consumer("unlog.to.server").handler(message -> {
-            eb.publish("log.to.client", "unlog:" + message.body());
-        });
+        eb.consumer("log.to.server").handler(message -> eb.publish("log.to.client", "log:" + message.body()));
+        eb.consumer("unlog.to.server").handler(message -> eb.publish("log.to.client", "unlog:" + message.body()));
     }
 
 }

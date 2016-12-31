@@ -28,15 +28,14 @@ public interface SQLRequests {
      * @return the request string
      */
     String getAll(String[] arguments);
-
+/*
     /**
      * Returns a Delete type request string.
      *
      * @param key : The condition verified by the element to be deleted.
      * @return the request string
      */
-    String delete(String key);
-
+/*   String delete(String key); */
     default String encodeSQL(String s) {
         StringBuilder tmp = new StringBuilder();
 
@@ -63,12 +62,13 @@ public interface SQLRequests {
                 // SELECT * FROM tablename
                 return "SELECT * FROM " + encodeSQL(arguments[0]);
             }
-
+/*
             @Override
             public String delete(String key) {
                 // TODO IF NEEDED
                 throw new UnsupportedOperationException();
             }
+           */
         };
     }
 
@@ -85,12 +85,13 @@ public interface SQLRequests {
             public String getAll(String[] arguments) {
                 return "SELECT * FROM channels";
             }
-
+/*
             @Override
             public String delete(String key) {
                 // TODO WHEN TABLE IS CREATED
                 return "DELETE FROM channels WHERE cname == " + encodeSQL(key);
             }
+  */
         };
     }
 
@@ -107,11 +108,12 @@ public interface SQLRequests {
             public String getAll(String[] arguments) {
                 return "SELECT * FROM users";
             }
-
+/*
             @Override
             public String delete(String username) {
                 return "DELETE FROM users WHERE username = '" + encodeSQL(requireNonNull(username)) + "'";
             }
+  */
         };
     }
 }
