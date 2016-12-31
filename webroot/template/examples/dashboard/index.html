@@ -37,47 +37,58 @@
 <div ng-app="index" ng-controller="controller">
     <!-- -->
     <div class="container" ng-show="notLogged">
-        <form>
-            <table>
-                <tr>
-                    <td>Username* :</td>
-                    <td><input type="text" ng-model="username" autocomplete="on" placeholder="Enter an username here">
-                    </td>
-                </tr>
-                <tr>
-                    <td>Password* :</td>
-                    <td><input type="password" ng-model="password" placeholder="Enter a password"></td>
-                </tr>
-                <tr>
-                    <td>Avatar select* :</td>
-                    <td><input type="radio" ng-model="avatar" value="1" checked>
-                        <input type="radio" ng-model="avatar" value="2">
-                        <input type="radio" ng-model="avatar" value="3"></td>
-                </tr>
-            </table>
-            <button ng-click="onClickPost(username, password, avatar)">SUBMIT</button>
-            <button ng-click="onClickGet()">GET</button>
-        </form>
-        <table>
-            <tr ng-repeat="x in users">
-                <td>{{x.username}}</td>
-                <td>{{x.avatar}}</td>
-            </tr>
-            {{errorCode}}
-        </table>
-
-        <form class="form-signin">
-            <h2 class="form-signin-heading">Thaw</h2>
-            <label for="inputEmail" class="sr-only">Username</label>
-            <input type="text" id="inputEmail" ng-model="a_username" class="form-control" placeholder="Username"
-                   required autofocus>
-            <label for="inputPassword" class="sr-only">Password</label>
-            <input type="password" id="inputPassword" ng-model="a_password" class="form-control" placeholder="Password"
-                   required>
-            <button class="btn btn-lg btn-primary btn-block" ng-click="authenticate(a_username, a_password)"
-                    type="submit">Sign in
-            </button>
-        </form>
+        <h1 class="form-signin-heading">Thaw</h1>
+        <!--        <div ng-show="signUp">
+                    <form class="form-signin">
+                        <h2 class="form-signin-heading">Sign up</h2>
+                        <table>
+                            <tr>
+                                <td>Username* :</td>
+                                <td><input type="text" class="form-control" ng-model="username" autocomplete="on"
+                                           placeholder="Enter an username here" autofocus required>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Password* :</td>
+                                <td><input type="password" class="form-control" ng-model="password"
+                                           placeholder="Enter a password" required></td>
+                            </tr>
+                            <tr>
+                                <td>Avatar select*</td>
+                                <td><input type="radio" ng-model="avatar" value="1" checked>
+                                    <input type="radio" ng-model="avatar" value="2">
+                                    <input type="radio" ng-model="avatar" value="3"></td>
+                            </tr>
+                        </table>
+                        <button class="btn btn-lg btn-primary btn-block" type="submit"
+                                ng-click="onClickPost(username, password, avatar)">Sign up
+                        </button>
+                    </form>
+                    <table>
+                        <tr ng-repeat="x in users">
+                            <td>{{x.username}}</td>
+                            <td>{{x.avatar}}</td>
+                        </tr>
+                        {{errorCode}}
+                    </table>
+    </div>
+    -->
+        <div>
+            <form class="form-signin">
+                <h2 class="form-signin-heading">Login</h2>
+                <label for="inputEmail" class="sr-only">Username</label>
+                <input type="text" id="inputEmail" ng-model="username" class="form-control" placeholder="Username"
+                       required autofocus>
+                <label for="inputPassword" class="sr-only">Password</label>
+                <input type="password" id="inputPassword" ng-model="password" class="form-control"
+                       placeholder="Password"
+                       required>
+                <button class="btn btn-lg btn-primary btn-block" ng-click="authenticate(username, password)"
+                        type="submit">Sign in
+                </button>
+                <button class="btn btn-lg btn-block btn-default" ng-click="onClickPost(username, password, 1)">Sign up</button>
+            </form>
+        </div>
     </div>
 
     <div ng-show="isLogged">
@@ -141,7 +152,7 @@
                                 <td>{{x.content}}</td>
                             </tr>
                         </table>
-                        <input class="postmessage" type="text" ng-model="message" placeholder="Type a message here"
+                        <input type="text" ng-model="message" placeholder="Type a message here"
                                ng-keypress="onPost($event, currentChannel,loggedUser, message);">
                     </div>
                 </div>

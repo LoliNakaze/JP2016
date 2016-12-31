@@ -6,6 +6,11 @@ angular.module('index', [])
     .controller('controller', function ($scope, $http, $sce) {
         $scope.message = "";
 
+        $scope.resetSignInForm = function () {
+            $scope.username = "";
+            $scope.password = "";
+        };
+
         $scope.logChecker = function () {
             $http.get("https://localhost:8080/api/check/")
                 .then(function (response) {
@@ -17,7 +22,7 @@ angular.module('index', [])
                     $scope.isLogged = false;
                     $scope.loggedUser = "";
                 });
-        }
+        };
 
         $scope.createEventBus = function () {
             $scope.eventBus = new EventBus("https://localhost:8080/eventbus/");
@@ -100,6 +105,7 @@ angular.module('index', [])
                     $scope.loggedUser = username;
                     $scope.isLogged = true;
                     $scope.notLogged = false;
+                    $scope.resetSignInForm();
                     console.log("success");
                 }, function (response) {
                     alert(response.statusText);
@@ -143,6 +149,8 @@ angular.module('index', [])
             $http.put('https://localhost:8080/api/users/' + username + '/' + password + '/' + avatar + "/")
                 .then(function () {
                     $scope.users.push({username: username, avatar: avatar});
+                    $scope.resetSignInForm();
+                    alert("You can log in with that account, now!");
                     console.log("success");
                 }, function (data, status) {
                     $scope.status = status;
