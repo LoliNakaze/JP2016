@@ -51,6 +51,7 @@ class REST {
         router.put("/api/users/:username/:password/:avatar/").handler(r -> catchExceptions(this::addUser, r));
 
         router.get("/api/logged/users/").handler(this::getLoggedUsers);
+        router.get("/api/check/").handler(this::checkLog);
 
         router.get("/api/authenticate/:username/:password/").handler(r -> catchExceptions(authHandler::handle, r));
         router.delete("/api/authenticate/:username/").handler(r -> catchExceptions(authHandler::logout, r));
@@ -62,6 +63,16 @@ class REST {
         router.get("/api/main/channel/:channel/").handler(r -> catchExceptions(this::getAllInChannel, r));
         // otherwise serve static pages
         router.route().handler(StaticHandler.create());
+    }
+
+    private void checkLog(RoutingContext routingContext) {
+        HttpServerResponse response = routingContext.response();
+
+        if (routingContext.session().isDestroyed() || routingContext.session().data().isEmpty()) {
+            response.setStatusCode(400).setStatusMessage("not logged").end();
+            return;
+        }
+        response.setStatusMessage("logged").end(routingContext.session().data().get("username").toString());
     }
 
     private void getLoggedUsers(RoutingContext routingContext) {
@@ -79,8 +90,6 @@ class REST {
                     .putHeader("content-type", "application/json").end();
         }
     }
-
-
 
     private void createChannel(RoutingContext routingContext) throws SQLException {
         HttpServerResponse response = routingContext.response();
