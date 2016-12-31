@@ -48,16 +48,14 @@ public class AuthenticateHandler implements Handler<RoutingContext> {
         if (list.size() != 1) {
             routingContext.session().destroy();
             response.putHeader("content-type", "application/json").setStatusCode(402).setStatusMessage("This user doesn't exist.").end();
-            return;
-        }
-        if (!Utils.checkPassword(list.get(0).get("password"), arguments[1])) {
+        } else if (!Utils.checkPassword(list.get(0).get("password"), arguments[1])) {
             routingContext.session().destroy();
             response.putHeader("content-type", "application/json").setStatusCode(403).setStatusMessage("Wrong password").end();
-            return;
+        } else {
+            session.put("username", arguments[0]);
+            connectedUsers.add(session);
+            response.putHeader("content-type", "application/json").end();
         }
-        session.put("username", arguments[0]);
-        connectedUsers.add(session);
-        response.putHeader("content-type", "application/json").end();
     }
 
     public void logout(RoutingContext routingContext) {

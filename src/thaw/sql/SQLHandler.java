@@ -33,7 +33,7 @@ public class SQLHandler {
             throw new IllegalStateException("There is already a channel with that name.");
         String channelForm = "(id INTEGER PRIMARY KEY AUTOINCREMENT, username VARCHAR2(20),content VARCHAR2(500), date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP)";
         statement.execute("CREATE TABLE " + arguments[0] + " " + channelForm);
-        statement.executeUpdate("INSERT INTO " + arguments[0] + " VALUES (0, '__System', 'This is the first message of the channel.', '" + new Date(System.currentTimeMillis()) + "')");
+        postInChannel(new String[]{arguments[0], "__System", "This is the first message of the channel."});
     }
 
     public ResultSet getAllChannels() throws SQLException {
@@ -48,12 +48,12 @@ public class SQLHandler {
         return statement.executeQuery(SQLRequests.createSQLChannelRequest().getAll(arguments));
     }
 
-    public int postInChannel(String[] arguments) throws SQLException {
+    public void postInChannel(String[] arguments) throws SQLException {
         Statement statement = connect(database, 1);
 
         String s = SQLRequests.createSQLChannelRequest().add(arguments);
 
-        return statement.executeUpdate(s);
+        statement.executeUpdate(s);
     }
 
     public int addUser(String[] arguments) throws SQLException {
@@ -79,8 +79,6 @@ public class SQLHandler {
                 "password varchar2(30) NOT NULL," +
                 "avatar INT NOT NULL DEFAULT 1)");
 
-//        statement.execute("DROP TABLE channels");
-//        statement.execute("DROP TABLE general");
         statement.execute("CREATE TABLE IF NOT EXISTS channels (cname varchar2(20) NOT NULL PRIMARY KEY)");
         addChannel(new String[]{"general"});
     }

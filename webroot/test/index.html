@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div ng-app="test" ng-controller="controller">
+    <table ng-repeat="x in loggedUsers">
+        <tr>
+            <td>{{x.username}}</td>
+        </tr>
+    </table>
+
+    <form>
+        <table>
+            <tr>
+                <td>Username* :</td>
+                <td><input type="text" ng-model="username" autocomplete="on" placeholder="Enter an username here"></td>
+            </tr>
+            <tr>
+                <td>Password* :</td>
+                <td><input type="password" ng-model="password" placeholder="Enter a password"></td>
+            </tr>
+            <tr>
+                <td>Avatar select* :</td>
+                <td><input type="radio" ng-model="avatar" value="1" checked>
+                    <input type="radio" ng-model="avatar" value="2">
+                    <input type="radio" ng-model="avatar" value="3"></td>
+            </tr>
+        </table>
+        <button ng-click="onClickPost(username, password, avatar)">SUBMIT</button>
+        <button ng-click="onClickGet()">GET</button>
+    </form>
+    <table>
+        <tr ng-repeat="x in users">
+            <td>{{x.username}}</td>
+            <td>{{x.avatar}}</td>
+        </tr>
+        {{errorCode}}
+    </table>
+
+    __________________________<br>
+    <div ng-show="notLogged">
+        <h2>Authentification</h2>
+
+        <form>
+            <table>
+                <tr>
+                    <td>Username* :</td>
+                    <td><input type="text" ng-model="a_username" autocomplete="on" placeholder="Enter an username here">
+                    </td>
+                </tr>
+                <tr>
+                    <td>Password* :</td>
+                    <td><input type="password" ng-model="a_password" placeholder="Enter a password"></td>
+                </tr>
+            </table>
+            <button ng-click="authenticate(a_username, a_password)">SUBMIT</button>
+        </form>
+    </div>
+    <div ng-show="isLogged">
+        <p>Logged as : {{loggedUser}}
+            <button ng-click="logout(loggedUser)">Log out</button>
+        </p>
+
+        __________________________<br>
+
+        <h2>Channels</h2>
+        <table>
+            <form>
+                <table>
+                    <tr>
+                        <td>Channel name* :</td>
+                        <td><input type="text" ng-model="cname" autocomplete="on" placeholder="Enter a channel name here">
+                        </td>
+                    </tr>
+                </table>
+                <button ng-click="createChannel(cname)">SUBMIT</button>
+                <br>
+            </form>
+        </table>
+
+        ___________________________<br>
+        <h2>Channel select</h2>
+        <table>
+            <tr ng-repeat="x in channels">
+                <td><a href="#" ng-click="selectChannel(x.cname); loadChannel(x.cname);">{{x.cname}}</a></td>
+            </tr>
+            {{errorCode}}
+        </table>
+        ____________________________<br>
+        <h2>Channel content</h2>
+        <table>
+            <h3>{{currentChannel}}</h3>
+            <input type="text" ng-model="message"
+                   ng-keypress="onPost($event, currentChannel,loggedUser, message);">
+            <tr ng-repeat="x in channel">
+                <td>{{x.username}}</td>
+                <td>{{x.content}}</td>
+                <td>{{x.date}}</td>
+            </tr>
+            {{errorCode}}
+        </table>
+    </div>
+</div>
+</body>
+
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.0-rc.2/angular.min.js"></script>
+<script src="index.js"></script>
+<script src="https://cdn.jsdelivr.net/sockjs/0.3.4/sockjs.min.js"></script>
+<script src="vertx3-eventbus-client/vertx-eventbus.js"></script>
+</html>

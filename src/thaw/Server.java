@@ -47,6 +47,22 @@ public class Server extends AbstractVerticle {
         router.route().handler(CookieHandler.create());
         router.route().handler(SessionHandler.create(LocalSessionStore.create(vertx)));
 
+        vertxEventBusRun(router);
+
+        rest.allowRequest(router);
+
+        // route to JSON REST APIs
+        rest.routeSetup(router);
+
+
+        // For HTTPS
+        HttpServerOptions httpsOpt = new HttpServerOptions().setUseAlpn(false).setSsl(true).setKeyStoreOptions(new JksOptions().setPath("keystore.jks").setPassword("password"));
+        vertx.createHttpServer(httpsOpt).requestHandler(router::accept).listen(8080);
+        vertxEventBusRun();
+        System.out.println("listen on port 8080");
+    }
+
+    private void vertxEventBusRun(Router router) {
         // Allow events for the designated addresses in/out of the event bus bridge
         BridgeOptions opts = new BridgeOptions()
                 .addInboundPermitted(new PermittedOptions().setAddress("chat.to.server"))
@@ -58,21 +74,9 @@ public class Server extends AbstractVerticle {
         // Create the event bus bridge and add it to the router.
         SockJSHandler ebHandler = SockJSHandler.create(vertx).bridge(opts);
         router.route("/eventbus/*").handler(ebHandler);
-
-        rest.allowRequest(router);
-
-        // route to JSON REST APIs
-        rest.routeSetup(router);
-
-
-        // For HTTPS
-        HttpServerOptions httpsOpt = new HttpServerOptions().setUseAlpn(false).setSsl(true).setKeyStoreOptions(new JksOptions().setPath("keystore.jks").setPassword("password"));
-        vertx.createHttpServer(httpsOpt).requestHandler(router::accept).listen(8080);
-        vertxEventBusSetup();
-        System.out.println("listen on port 8080");
     }
 
-    private void vertxEventBusSetup() {
+    private void vertxEventBusRun() {
         EventBus eb = vertx.eventBus();
 
         // Register to listen for messages coming IN to the server
