@@ -68,9 +68,12 @@ body {
     background-color: #428bca;
 }
 
-.table-chat col {
+.table-chat col .info {
     width: 20%;
-    background-color: #f9f9f9;
+}
+
+.table-chat col .content {
+    width: 80%;
 }
 
 /*

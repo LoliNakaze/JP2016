@@ -47,7 +47,7 @@ public class Server extends AbstractVerticle {
         router.route().handler(CookieHandler.create());
         router.route().handler(SessionHandler.create(LocalSessionStore.create(vertx)));
 
-        vertxEventBusRun(router);
+        vertxEventBusSetup(router);
 
         rest.allowRequest(router);
 
@@ -62,7 +62,7 @@ public class Server extends AbstractVerticle {
         System.out.println("listen on port 8080");
     }
 
-    private void vertxEventBusRun(Router router) {
+    private void vertxEventBusSetup(Router router) {
         // Allow events for the designated addresses in/out of the event bus bridge
         BridgeOptions opts = new BridgeOptions()
                 .addInboundPermitted(new PermittedOptions().setAddress("chat.to.server"))

@@ -33,7 +33,7 @@ angular.module('index', [])
                     console.log('Received: ' + JSON.stringify(message));
                     var array = message.body.split('__::__', 4);
                     console.log(array[1] + ', ' + $scope.currentChannel);
-                    $scope.channel.push({date: array[0], username: array[2], content: array[3]});
+                    $scope.original.push({date: array[0], username: array[2], content: array[3]});
                     console.log("updated with eventBus");
                 });
                 $scope.eventBus.registerHandler("log.to.client", function (error, message) {
@@ -88,11 +88,22 @@ angular.module('index', [])
                 });
         };
 
-        $scope.onPost = function onPost(keyEvent, channel, username, content) {
+        $scope.onPostMessage = function onPost(keyEvent, channel, username, content) {
             console.log("send command");
             if (keyEvent.which === 13 && content.length > 0) {
                 $scope.postMessage(channel, username, content);
                 $scope.message = "";
+            }
+        };
+
+        $scope.onPostSearch = function onPost(keyEvent, content) {
+            console.log("send command");
+            if (keyEvent.which === 13 && content.length > 0) {
+                $scope.searchChannel(content);
+                $scope.message = "";
+            }
+            else {
+                $scope.channel = $scope.original;
             }
         };
 
@@ -140,6 +151,17 @@ angular.module('index', [])
                     console.log("error");
                 });
         };
+
+        $scope.searchChannel = function (content) {
+            var tmp = [];
+            for (i = 0; i < $scope.original.length ; i++) {
+                if ($scope.original[i].content.indexOf(content) != -1) {
+                    tmp.push($scope.original[i]);
+                }
+            }
+            $scope.channel = tmp;
+        };
+
         $scope.onClickPost = function onClickPost(username, password, avatar) {
             console.log("call");
             if (username == null || password == null || avatar == null) {
@@ -183,6 +205,7 @@ angular.module('index', [])
             console.log("call load channel");
             $http.get('https://localhost:8080/api/main/channel/' + channel + '/')
                 .then(function (response) {
+                    $scope.original = response.data;
                     $scope.channel = response.data;
                     console.log("channel loaded successfully");
                 }, function (response) {
