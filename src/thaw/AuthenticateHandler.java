@@ -40,16 +40,13 @@ public class AuthenticateHandler implements Handler<RoutingContext> {
         try {
             list = resultSetToList(sqlHandler.getUser(arguments), "username", "password");
         } catch (SQLException e) {
-            routingContext.session().destroy();
             response.putHeader("content-type", "application/json").setStatusCode(405).setStatusMessage("Database error.").end();
             return;
         }
 
         if (list.size() != 1) {
-            routingContext.session().destroy();
             response.putHeader("content-type", "application/json").setStatusCode(402).setStatusMessage("This user doesn't exist.").end();
         } else if (!Utils.checkPassword(list.get(0).get("password"), arguments[1])) {
-            routingContext.session().destroy();
             response.putHeader("content-type", "application/json").setStatusCode(403).setStatusMessage("Wrong password").end();
         } else {
             session.put("username", arguments[0]);
